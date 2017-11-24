@@ -35,7 +35,14 @@ app.get('/blogs', (req, res) => {
 app.get('/blogs/:id', (req, res) => {
 	Blog
 	.findById(req.params.id)
-	.then(blogPost => res.json(blogPost.apiRepr()))
+	.then(blogPost => {
+		if (blogPost) {
+			res.json(blogPost.apiRepr());
+		} 
+		else {
+			res.status(404).send('item not found');
+		}
+	})
 	.catch(err => {
 		console.error(err);
 		res.status(500).json({message: 'Internal server error'});
@@ -82,7 +89,7 @@ app.put('/blogs/:id', (req, res) => {
 		}
 	});
 	Blog
-	.findByIdAndUpdate(req.params.id, {$set: toUpdate})
+	.findByIdAndUpdate(req.params.id, {$set: toUpdate}, {new: true})
 	.then(blogPost => res.status(200).json(blogPost.apiRepr()))
 	.catch(err => res.status(500).json({message: 'Internal server error'}));
 });
@@ -111,7 +118,7 @@ function runServer(databaseUrl = DATABASE_URL, port = PORT) {
 				mongoose.disonnect();
 				reject(err);
 			});
-		});
+		}, {useMongoClient: true});
 	});
 }
 // this function closes the server, and returns a promise
